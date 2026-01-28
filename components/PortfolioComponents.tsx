@@ -41,15 +41,15 @@ export const SkillMatrix: React.FC = () => {
   const iconBaseUrl = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/";
 
   return (
-    <div className="flex flex-col items-center p-8 lg:p-12 bg-stone-800/40 rounded-3xl shadow-2xl border border-stone-700/50 my-8 backdrop-blur-md overflow-hidden relative">
+    <div className="flex flex-col items-center p-4 sm:p-8 lg:p-12 bg-stone-800/40 rounded-3xl shadow-2xl border border-stone-700/50 my-8 backdrop-blur-md overflow-hidden relative">
       <div className="absolute top-0 right-0 w-64 h-64 bg-nobel-gold/5 blur-[120px] pointer-events-none"></div>
-      
-      <div className="flex gap-2 mb-12 overflow-x-auto w-full justify-center scrollbar-hide">
+
+      <div className="flex flex-wrap gap-2 mb-12 w-full justify-center">
         {categories.map(cat => (
-          <button 
-            key={cat} 
-            onClick={() => setActiveCategory(cat)} 
-            className={`px-5 py-2.5 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 border whitespace-nowrap ${
               activeCategory === cat ? 'bg-nobel-gold text-white border-nobel-gold shadow-lg shadow-nobel-gold/20' : 'bg-stone-800/50 text-stone-500 border-stone-700 hover:border-stone-500'
             }`}
           >
@@ -57,27 +57,27 @@ export const SkillMatrix: React.FC = () => {
           </button>
         ))}
       </div>
-      
-      <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+
+      <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
         <AnimatePresence mode="popLayout">
           {skills.filter(s => s.category === activeCategory).map((skill, index) => (
-            <motion.div 
-              key={skill.name} 
-              initial={{ opacity: 0, scale: 0.8, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.8, y: -20 }} 
-              transition={{ delay: index * 0.05 }} 
-              className="flex flex-col items-center justify-center p-6 bg-stone-900/60 rounded-2xl border border-stone-800 hover:border-nobel-gold/30 hover:bg-stone-900 transition-all group shadow-sm"
+            <motion.div
+              key={skill.name}
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              transition={{ delay: index * 0.05 }}
+              className="flex flex-col items-center justify-center p-4 sm:p-6 bg-stone-900/60 rounded-2xl border border-stone-800 hover:border-nobel-gold/30 hover:bg-stone-900 transition-all group shadow-sm min-h-[120px]"
             >
-              <div className="w-12 h-12 mb-4 flex items-center justify-center">
-                 <img 
-                    src={`${iconBaseUrl}${skill.icon}`} 
-                    alt={`${skill.name} logo`} 
-                    className="w-full h-full object-contain transition-all grayscale-[0.2] group-hover:grayscale-0" 
-                    onError={(e) => { (e.target as any).src = `https://ui-avatars.com/api/?name=${skill.name}&background=1a1a1a&color=C5A059&bold=true`; }} 
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 flex items-center justify-center flex-shrink-0">
+                 <img
+                    src={`${iconBaseUrl}${skill.icon}`}
+                    alt={`${skill.name} logo`}
+                    className="w-full h-full object-contain transition-all grayscale-[0.2] group-hover:grayscale-0"
+                    onError={(e) => { (e.target as any).src = `https://ui-avatars.com/api/?name=${skill.name}&background=1a1a1a&color=C5A059&bold=true`; }}
                  />
               </div>
-              <span className="font-serif text-sm text-stone-300 group-hover:text-white transition-colors">{skill.name}</span>
+              <span className="font-serif text-xs sm:text-sm text-stone-300 group-hover:text-white transition-colors text-center break-words w-full">{skill.name}</span>
             </motion.div>
           ))}
         </AnimatePresence>

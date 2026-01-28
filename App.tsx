@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HeroScene } from './components/PortfolioScene';
 import { SkillMatrix, ExperienceTimeline, ProjectArchitectureDetail } from './components/PortfolioComponents';
 import { ScrollingDecorations } from './components/ScrollingDecorations';
-import { ArrowDown, Menu, X, MapPin, Linkedin, Github, Code2, Info, Cpu, Gamepad2, Tv, Languages, Music, Keyboard, Mail, ExternalLink } from 'lucide-react';
+import { ArrowDown, Menu, X, MapPin, Linkedin, Github, Code2, Info, Cpu, Gamepad2, Tv, Languages, Music, Keyboard, Mail, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProjectCardProps {
@@ -21,52 +21,35 @@ interface ProjectCardProps {
   tech?: string[];
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ 
-  title, 
-  subtitle, 
-  description, 
-  isSelected,
+const ProjectCard: React.FC<ProjectCardProps> = ({
+  title,
+  subtitle,
+  description,
   onClick,
-  tech 
+  tech
 }) => {
   return (
-    <motion.div 
+    <motion.div
       onClick={onClick}
       whileHover={{ y: -5 }}
-      className={`flex flex-col cursor-pointer p-8 rounded-xl border transition-all duration-300 w-full h-full relative overflow-hidden ${
-        isSelected 
-        ? 'bg-stone-900 border-nobel-gold shadow-xl' 
-        : 'bg-white border-stone-200 shadow-sm hover:shadow-md hover:border-nobel-gold/50'
-      }`}
+      className="flex flex-col cursor-pointer p-8 rounded-xl border transition-all duration-300 w-full h-full relative overflow-hidden group bg-white border-stone-200 shadow-sm hover:shadow-md hover:border-nobel-gold/50"
     >
-      <h3 className={`font-serif text-2xl mb-2 ${isSelected ? 'text-white' : 'text-stone-900'}`}>{title}</h3>
+      <h3 className="font-serif text-2xl mb-2 text-stone-900">{title}</h3>
       <p className="text-xs text-nobel-gold font-bold uppercase tracking-widest mb-4">{subtitle}</p>
-      <div className={`w-12 h-0.5 mb-4 transition-all duration-500 ${isSelected ? 'bg-nobel-gold w-full' : 'bg-stone-100 group-hover:w-full'}`}></div>
-      <p className={`text-sm leading-relaxed mb-6 ${isSelected ? 'text-stone-400' : 'text-stone-600'}`}>{description}</p>
-      
+      <div className="w-12 h-0.5 mb-4 transition-all duration-500 bg-stone-100 group-hover:bg-nobel-gold group-hover:w-full"></div>
+      <p className="text-sm leading-relaxed mb-6 text-stone-600">{description}</p>
+
       {tech && (
         <div className="flex flex-wrap gap-2 mt-auto">
           {tech.map(t => (
-            <span key={t} className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
-              isSelected ? 'bg-stone-800 text-stone-500' : 'bg-stone-50 text-stone-400'
-            }`}>
+            <span key={t} className="px-2 py-0.5 text-[10px] font-bold rounded uppercase bg-stone-50 text-stone-400">
               {t}
             </span>
           ))}
         </div>
       )}
-      
-      {isSelected && (
-        <motion.div 
-          layoutId="active-indicator"
-          className="absolute top-4 right-4 text-nobel-gold"
-        >
-          <div className="flex items-center gap-1">
-             <span className="text-[10px] font-bold uppercase tracking-tighter">Deep Dive</span>
-             <div className="bg-nobel-gold/10 p-1 rounded-full"><Info size={14} /></div>
-          </div>
-        </motion.div>
-      )}
+
+      <div className="absolute inset-0 bg-nobel-gold/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
     </motion.div>
   );
 };
@@ -74,7 +57,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 const App: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('chat2graph');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -96,6 +81,47 @@ const App: React.FC = () => {
 
   const handleProjectSelect = (id: string) => {
     setSelectedProjectId(id);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    setSelectedProjectId(null);
+    document.body.style.overflow = 'unset';
+  };
+
+  const navigateProject = (direction: 'next' | 'prev') => {
+    if (!selectedProjectId) return;
+    const currentIndex = projectData.findIndex(p => p.id === selectedProjectId);
+    let newIndex: number;
+    if (direction === 'next') {
+      newIndex = (currentIndex + 1) % projectData.length;
+    } else {
+      newIndex = (currentIndex - 1 + projectData.length) % projectData.length;
+    }
+    setSelectedProjectId(projectData[newIndex].id);
+  };
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      navigateProject('next');
+    } else if (isRightSwipe) {
+      navigateProject('prev');
+    }
   };
 
   const projectData = [
@@ -242,35 +268,99 @@ const App: React.FC = () => {
                 <div className="text-center mb-16">
                     <div className="inline-block mb-3 text-xs font-bold tracking-widest text-stone-500 uppercase">TECHNICAL PORTFOLIO</div>
                     <h2 className="font-serif text-4xl md:text-5xl mb-4 text-stone-900">Featured Projects</h2>
-                    <p className="text-stone-500">Select a project below to see its detailed architecture and core engineering insights.</p>
-                </div>
-
-                <div className="mb-20">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={selectedProjectId}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <ProjectArchitectureDetail id={selectedProjectId} />
-                        </motion.div>
-                    </AnimatePresence>
+                    <p className="text-stone-500">Click a project to explore its detailed architecture and insights</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {projectData.map(proj => (
-                        <ProjectCard 
+                        <ProjectCard
                             key={proj.id}
                             id={proj.id}
                             {...proj}
-                            isSelected={selectedProjectId === proj.id}
+                            isSelected={false}
                             onClick={() => handleProjectSelect(proj.id)}
                         />
                     ))}
                 </div>
             </div>
+
+            {/* Modal */}
+            <AnimatePresence>
+                {selectedProjectId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+                        onClick={closeModal}
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="relative w-full max-w-6xl max-h-[85vh] md:max-h-[90vh] flex flex-col bg-stone-900 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Desktop close button */}
+                            <button
+                                onClick={closeModal}
+                                className="hidden md:block absolute top-6 right-6 z-20 p-2 bg-stone-800/80 hover:bg-stone-700 text-white rounded-full transition-colors backdrop-blur-sm"
+                                aria-label="Close"
+                            >
+                                <X size={24} />
+                            </button>
+
+                            {/* Desktop navigation buttons */}
+                            <button
+                                onClick={() => navigateProject('prev')}
+                                className="hidden md:block absolute left-6 top-1/2 -translate-y-1/2 z-20 p-3 bg-stone-800/80 hover:bg-stone-700 text-white rounded-full transition-colors backdrop-blur-sm"
+                                aria-label="Previous project"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
+                            <button
+                                onClick={() => navigateProject('next')}
+                                className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2 z-20 p-3 bg-stone-800/80 hover:bg-stone-700 text-white rounded-full transition-colors backdrop-blur-sm"
+                                aria-label="Next project"
+                            >
+                                <ChevronRight size={24} />
+                            </button>
+
+                            {/* Scrollable content */}
+                            <div className="flex-1 overflow-y-auto p-6 md:p-12">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={selectedProjectId}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <ProjectArchitectureDetail id={selectedProjectId} />
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Mobile bottom bar */}
+                            <div className="md:hidden border-t border-stone-800 bg-stone-950/95 backdrop-blur-md p-4">
+                                <div className="text-center text-stone-500 text-xs mb-3">
+                                    Swipe left or right to navigate
+                                </div>
+                                <button
+                                    onClick={closeModal}
+                                    className="w-full py-3 px-6 bg-nobel-gold hover:bg-nobel-gold/90 text-white rounded-full transition-colors font-semibold text-sm"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
 
         <section id="toolkit" className="py-24 bg-stone-900 text-white">
